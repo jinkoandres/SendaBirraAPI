@@ -6,18 +6,17 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <ArduinoJson.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_FeatherOLED.h>
 
-#define ANDRES_AND_ARI
+Adafruit_FeatherOLED oled = Adafruit_FeatherOLED();
 
-#ifdef HAROLD_AND_JOSE_ANGEL
+
 const char* kSSID     = "";
 const char* kNetworkPassword = "";
-#endif
 
-#ifdef ANDRES_AND_ARI
-const char* kSSID     = "";
-const char* kNetworkPassword = "";
-#endif
+
 const int kArduinoTemperatureDigitalPin = 0;
 const int kMaxSensorsAvailable = 3;
 const int kJSONBufferSize = JSON_OBJECT_SIZE(kMaxSensorsAvailable);
@@ -41,6 +40,8 @@ uint8_t numberOfSensorsFound = 0;
 
 void setup() {
   Serial.begin(115200);
+  oled.init();
+  oled.clearDisplay();
   delay(100);
   initializeTemperatureLibrary();
   // We start by connecting to a WiFi network
@@ -151,21 +152,23 @@ void initializeTemperatureLibrary() {
   sensors.requestTemperatures();
   
   numberOfSensorsFound = sensors.getDeviceCount();
-  Serial.print("Found ");
-  Serial.print(numberOfSensorsFound, DEC);
-  Serial.println(" sensors");
+  oled.setCursor(0,0);
+  oled.print("Found ");
+  oled.print(numberOfSensorsFound);
+  oled.println(" sensors:");
  
+  
   updateTemperatureValues();
  
   for (int i = 0; i < numberOfSensorsFound; i++) {
-    Serial.print("Info: ");
-    Serial.print("Address = ");
-    printAddress(sensorDataInfo[i].address);
-    Serial.print(" Temp = ");
-    Serial.print(sensorDataInfo[i].temperatureValue, DEC);
-    Serial.print(" at = " + sensorDataInfo[i].lastTempRequest);
-    Serial.println("");
+    oled.print("S");
+    oled.print(i+1);
+    oled.print(" "); 
+    oled.print(sensorDataInfo[i].temperatureValue);
+    oled.println("C");
   }
+  oled.display();
+  
 }
 void updateTemperatureValues() {
   sensors.requestTemperatures();
