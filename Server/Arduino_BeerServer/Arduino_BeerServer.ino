@@ -12,7 +12,6 @@
 
 Adafruit_FeatherOLED oled = Adafruit_FeatherOLED();
 
-
 const char* kSSID     = "";
 const char* kNetworkPassword = "";
 
@@ -40,37 +39,44 @@ uint8_t numberOfSensorsFound = 0;
 
 void setup() {
   Serial.begin(115200);
-  oled.init();
-  oled.clearDisplay();
-  delay(100);
+  startDisplay();
   initializeTemperatureLibrary();
   // We start by connecting to a WiFi network
- 
-  Serial.println();
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(kSSID);
+  oled.clearDisplay();
+  oled.setCursor(0,0);
+  oled.println("Connecting to: ");
+  oled.println(kSSID);
+  oled.println("");
+  oled.display();
   
-  //WiFi.config(static_ip, gateway, subnet);
+  WiFi.config(static_ip, gateway, subnet);
   WiFi.begin(kSSID, kNetworkPassword);
   unsigned long counter = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
+    delay(100);
     counter++;
-    Serial.print("*");
-    if (counter % 10 == 0) {
-      Serial.println();
+    oled.print("*");
+    if (counter % 22 == 0) {
+      oled.clearDisplay();
+      oled.setCursor(0,0);
+      oled.println("Connecting to: ");
+      oled.println(kSSID);
+      oled.println("");
     }
+    oled.display();
   }
-
-  Serial.println("");
-  Serial.println("WiFi connected");  
+  oled.clearDisplay();
+  oled.setCursor(0, 0);
+  oled.println("WiFi connected");  
  // Start the server
   server.begin();
-  Serial.print("Server started on :");
-
+ // server.on("/favicon.ico", handleFavicon);
+  
+  oled.println("Server started on:");
+  oled.println("");
   // Print the IP address
-  Serial.println(WiFi.localIP());
+  oled.println(WiFi.localIP());
+  oled.display();
 }
 
 void loop() {  
@@ -78,13 +84,21 @@ void loop() {
   WiFiClient client = server.available();
   if (!client) {
     updateTemperatureValues();
+    oled.clearDisplay();
+    oled.setCursor(0,0);
+    oled.println("Idle. last temps are:");
+    oled.display();
+    displayTemperatureValues(false, 1);
     return;
   }
   
   // Wait until the client sends some data
-  Serial.println("new client");
+  oled.clearDisplay();
+  oled.setCursor(0,0);
+  oled.println("new request received");
+  oled.display();
   while(!client.available()){
-    delay(1);
+    delay(10);
   }
   
   // Read the first line of the request
@@ -101,32 +115,31 @@ void loop() {
     root["id"] = 1;
     root["temperature"] = sensorDataInfo[0].temperatureValue;
     root["elapsedMs"] = sensorDataInfo[0].lastTempRequest;
-    root.printTo(Serial);
+    //root.printTo(Serial);
   }
   else if (req.indexOf("/sensor/2") != -1) {
     root["id"] = 2;
     root["temperature"] = sensorDataInfo[1].temperatureValue;
     root["elapsedMs"] = sensorDataInfo[1].lastTempRequest;
-    root.printTo(Serial);
+    //root.printTo(Serial);
   }
   else if (req.indexOf("/sensor/3") != -1) {
    root["id"] = 3;
    root["temperature"] = sensorDataInfo[2].temperatureValue;
    root["elapsedMs"] = sensorDataInfo[2].lastTempRequest;
-   root.printTo(Serial);
+   //root.printTo(Serial);
   }
   else if (req.indexOf("sensors/raw") != -1) {
     root["sensor1"] = sensorDataInfo[0].temperatureValue;
     root["sensor2"] = sensorDataInfo[1].temperatureValue;
     root["sensor3"] = sensorDataInfo[2].temperatureValue;
-    root.printTo(Serial);
+    //root.printTo(Serial);
   }
   else {
     Serial.println("invalid request. stopping client " + req);
     client.stop();
     return;
   }
-  
   client.flush();
   size_t length = root.measureLength();
   char jsonPart[length + 1];
@@ -138,10 +151,11 @@ void loop() {
   client.println();
   client.println(jsonPart);
   client.println();
-  delay(1);
+  delay(10);
   client.stop();
-  Serial.println("Client disonnected");
   
+  oled.println("Client disonnected");
+  oled.display();
   // The client will actually be disconnected 
   // when the function returns and 'client' object is detroyed
 }
@@ -152,23 +166,13 @@ void initializeTemperatureLibrary() {
   sensors.requestTemperatures();
   
   numberOfSensorsFound = sensors.getDeviceCount();
-  oled.setCursor(0,0);
-  oled.print("Found ");
-  oled.print(numberOfSensorsFound);
-  oled.println(" sensors:");
- 
-  
   updateTemperatureValues();
- 
-  for (int i = 0; i < numberOfSensorsFound; i++) {
-    oled.print("S");
-    oled.print(i+1);
-    oled.print(" "); 
-    oled.print(sensorDataInfo[i].temperatureValue);
-    oled.println("C");
-  }
-  oled.display();
   
+  const int first_line = 0;
+  const int second_line = 1;
+
+  displayNumberOfSensors(first_line); 
+  displayTemperatureValues(false, second_line);
 }
 void updateTemperatureValues() {
   sensors.requestTemperatures();
@@ -188,4 +192,59 @@ void printAddress(DeviceAddress deviceAddress)
     if (deviceAddress[i] < 16) Serial.print("0");
     Serial.print(deviceAddress[i], HEX);
   }
+}
+void startDisplay() {
+  oled.init();
+  oled.clearDisplay();
+  oled.setCursor(0, 0);
+  oled.println(".. Starting Server ..");
+  oled.display();
+  int prev_x = 0;
+  int prev_y = 8;
+  for (int i = 8; i < 8 ; i = i+8) {
+    int new_x = prev_x + i;
+    int new_y = prev_y + i/2;
+    if (new_y > 32) new_y = 8;
+   
+    oled.drawLine(prev_x, prev_y, new_x, new_y, WHITE);
+    prev_x = new_x;
+    prev_y = new_y;
+    oled.display();
+    delay(500);
+  }
+  oled.clearDisplay();
+
+}
+void displayNumberOfSensors(const int vertical_index) 
+{
+  oled.clearDisplay();
+  oled.setCursor(0,vertical_index);
+  oled.print("Found ");
+  oled.print(numberOfSensorsFound);
+  oled.println(" sensors:");
+  oled.display();
+}
+
+void displayTemperatureValues(const bool should_clear, const int vertical_index) 
+{
+  if (should_clear) 
+  {
+    oled.clearDisplay();
+  }
+  
+  oled.setCursor(0, vertical_index * 8);
+  
+  for (int i = 0; i < numberOfSensorsFound; i++) 
+  {
+    oled.print("S");
+    oled.print(i+1);
+    oled.print(" ");
+    oled.print(sensorDataInfo[i].temperatureValue, 2);
+    oled.println(" C");
+  }
+  oled.display();
+}
+
+void handleFavicon() {
+  //server.send(404, "text/html; charset=iso-8859-1","<html><head> <title>404 Not Found</title></head><body><h1>Not Found</h1></body></html>");
 }
