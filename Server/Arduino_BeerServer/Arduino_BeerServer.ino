@@ -12,8 +12,8 @@
 
 Adafruit_FeatherOLED oled = Adafruit_FeatherOLED();
 
-const char* kSSID     = "";
-const char* kNetworkPassword = "";
+const char* kSSID     = "Vengaboys";
+const char* kNetworkPassword = "Sandyypapo";
 
 
 const int kArduinoTemperatureDigitalPin = 0;
@@ -21,8 +21,8 @@ const int kMaxSensorsAvailable = 3;
 const int kJSONBufferSize = JSON_OBJECT_SIZE(kMaxSensorsAvailable);
 
 WiFiServer server(80);
-IPAddress static_ip(192,168,1,254);
-IPAddress gateway(192,168,1,1);
+IPAddress static_ip(192,168,2,254);
+IPAddress gateway(192,168,2,1);
 IPAddress subnet(255,255,255,0);
 
 struct SensorData {
@@ -42,41 +42,23 @@ void setup() {
   startDisplay();
   initializeTemperatureLibrary();
   // We start by connecting to a WiFi network
-  oled.clearDisplay();
-  oled.setCursor(0,0);
-  oled.println("Connecting to: ");
-  oled.println(kSSID);
-  oled.println("");
-  oled.display();
+  displayNetworkName(kSSID);
   
   WiFi.config(static_ip, gateway, subnet);
   WiFi.begin(kSSID, kNetworkPassword);
-  unsigned long counter = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(100);
-    counter++;
-    oled.print("*");
-    if (counter % 22 == 0) {
-      oled.clearDisplay();
-      oled.setCursor(0,0);
-      oled.println("Connecting to: ");
-      oled.println(kSSID);
-      oled.println("");
-    }
-    oled.display();
+    displayConnectingScreen();
   }
-  oled.clearDisplay();
-  oled.setCursor(0, 0);
-  oled.println("WiFi connected");  
+    
  // Start the server
+  displaySuccesfulConnetionMessage();
+  delay(2000);
   server.begin();
  // server.on("/favicon.ico", handleFavicon);
   
-  oled.println("Server started on:");
-  oled.println("");
-  // Print the IP address
-  oled.println(WiFi.localIP());
-  oled.display();
+  displayLocalIp(WiFi.localIP());
+  delay (5000);
 }
 
 void loop() {  
@@ -212,7 +194,7 @@ void startDisplay() {
     oled.display();
     delay(500);
   }
-  oled.clearDisplay();
+ 
 
 }
 void displayNumberOfSensors(const int vertical_index) 
@@ -245,6 +227,45 @@ void displayTemperatureValues(const bool should_clear, const int vertical_index)
   oled.display();
 }
 
+void displayNetworkName(String networkName) 
+{
+  oled.clearDisplay();
+  oled.setCursor(0,0);
+  oled.println("Connecting to: ");
+  oled.println(networkName);
+  oled.println("");
+  oled.display();
+}
+
 void handleFavicon() {
   //server.send(404, "text/html; charset=iso-8859-1","<html><head> <title>404 Not Found</title></head><body><h1>Not Found</h1></body></html>");
 }
+
+void displayLocalIp(IPAddress ip) {
+  oled.clearDisplay();
+  oled.setCursor(0, 0);
+  oled.println("Server started on:");
+  oled.println("");
+  // Print the IP address
+  oled.println(ip);
+  oled.display();
+}
+void displayConnectingScreen() {
+  static int counter = 0;
+  counter++;
+    oled.print("*");
+    if (counter % 22 == 0) {
+      oled.clearDisplay();
+      oled.setCursor(0,0);
+      oled.println("Connecting to: ");
+      oled.println(kSSID);
+      oled.println("");
+    }
+    oled.display();
+}
+void displaySuccesfulConnetionMessage() {
+  oled.clearDisplay();
+  oled.setCursor(0, 0);
+  oled.println("WiFi connected!");
+  oled.display();
+ }
