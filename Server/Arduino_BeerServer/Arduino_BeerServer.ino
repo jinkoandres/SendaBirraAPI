@@ -12,8 +12,8 @@
 
 Adafruit_FeatherOLED oled = Adafruit_FeatherOLED();
 
-const char* kSSID     = "Vengaboys";
-const char* kNetworkPassword = "Sandyypapo";
+const char* kSSID     = "";
+const char* kNetworkPassword = "";
 
 
 const int kArduinoTemperatureDigitalPin = 0;
