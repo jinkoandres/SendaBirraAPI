@@ -66,19 +66,16 @@ void loop() {
   WiFiClient client = server.available();
   if (!client) {
     updateTemperatureValues();
-    oled.clearDisplay();
-    oled.setCursor(0,0);
-    oled.println("Idle. last temps are:");
-    oled.display();
+    //oled.clearDisplay();
+    //oled.setCursor(0,0);
+    //oled.println("Idle. last temps are:");
+    //oled.display();
     displayTemperatureValues(false, 1);
     return;
   }
   
   // Wait until the client sends some data
-  oled.clearDisplay();
-  oled.setCursor(0,0);
-  oled.println("new request received");
-  oled.display();
+  displayNewClientMessage();
   while(!client.available()){
     delay(10);
   }
@@ -136,8 +133,8 @@ void loop() {
   delay(10);
   client.stop();
   
-  oled.println("Client disonnected");
-  oled.display();
+  //oled.println("Client disonnected");
+  //oled.display();
   // The client will actually be disconnected 
   // when the function returns and 'client' object is detroyed
 }
@@ -269,3 +266,10 @@ void displaySuccesfulConnetionMessage() {
   oled.println("WiFi connected!");
   oled.display();
  }
+
+void displayNewClientMessage() {
+  oled.clearDisplay();
+  oled.setCursor(0,0);
+  oled.println("new request received");
+  oled.display();
+  }
