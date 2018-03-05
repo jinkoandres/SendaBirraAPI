@@ -15,7 +15,8 @@ Adafruit_FeatherOLED oled = Adafruit_FeatherOLED();
 const char* kSSID     = "";
 const char* kNetworkPassword = "";
 
-
+boolean C_buttonPressed = false;
+const uint8_t kButtonPin = 2;
 const int kArduinoTemperatureDigitalPin = 0;
 const int kMaxSensorsAvailable = 3;
 const int kJSONBufferSize = JSON_OBJECT_SIZE(kMaxSensorsAvailable);
@@ -39,7 +40,7 @@ uint8_t numberOfSensorsFound = 0;
 
 void setup() {
   Serial.begin(115200);
-  startDisplay();
+  initializeDisplay();
   initializeTemperatureLibrary();
   // We start by connecting to a WiFi network
   displayNetworkName(kSSID);
@@ -55,10 +56,10 @@ void setup() {
   displaySuccesfulConnetionMessage();
   delay(2000);
   server.begin();
- // server.on("/favicon.ico", handleFavicon);
-  
   displayLocalIp(WiFi.localIP());
   delay (5000);
+  pinMode(kButtonPin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(kButtonPin), handleButtonPress, CHANGE); 
 }
 
 void loop() {  
@@ -66,11 +67,13 @@ void loop() {
   WiFiClient client = server.available();
   if (!client) {
     updateTemperatureValues();
-    //oled.clearDisplay();
-    //oled.setCursor(0,0);
-    //oled.println("Idle. last temps are:");
-    //oled.display();
-    displayTemperatureValues(false, 1);
+    if (C_buttonPressed) 
+    {
+      displayLocalIp(WiFi.localIP());
+    }
+    else {
+      displayTemperatureValues();
+    }
     return;
   }
   
@@ -151,7 +154,6 @@ void initializeTemperatureLibrary() {
   const int second_line = 1;
 
   displayNumberOfSensors(first_line); 
-  displayTemperatureValues(false, second_line);
 }
 void updateTemperatureValues() {
   sensors.requestTemperatures();
@@ -163,6 +165,9 @@ void updateTemperatureValues() {
     }
 }
 
+void handleButtonPress() {
+  C_buttonPressed = !C_buttonPressed;
+}
 // function to print a device address
 void printAddress(DeviceAddress deviceAddress)
 {
@@ -172,28 +177,15 @@ void printAddress(DeviceAddress deviceAddress)
     Serial.print(deviceAddress[i], HEX);
   }
 }
-void startDisplay() {
+
+void initializeDisplay() {
   oled.init();
   oled.clearDisplay();
   oled.setCursor(0, 0);
   oled.println(".. Starting Server ..");
   oled.display();
-  int prev_x = 0;
-  int prev_y = 8;
-  for (int i = 8; i < 8 ; i = i+8) {
-    int new_x = prev_x + i;
-    int new_y = prev_y + i/2;
-    if (new_y > 32) new_y = 8;
-   
-    oled.drawLine(prev_x, prev_y, new_x, new_y, WHITE);
-    prev_x = new_x;
-    prev_y = new_y;
-    oled.display();
-    delay(500);
-  }
- 
-
 }
+
 void displayNumberOfSensors(const int vertical_index) 
 {
   oled.clearDisplay();
@@ -204,15 +196,11 @@ void displayNumberOfSensors(const int vertical_index)
   oled.display();
 }
 
-void displayTemperatureValues(const bool should_clear, const int vertical_index) 
+void displayTemperatureValues() 
 {
-  if (should_clear) 
-  {
-    oled.clearDisplay();
-  }
-  
-  oled.setCursor(0, vertical_index * 8);
-  
+  oled.clearDisplay();
+  oled.setCursor(0,0);
+  oled.println("Idle. Temperatures:");
   for (int i = 0; i < numberOfSensorsFound; i++) 
   {
     oled.print("S");
@@ -234,10 +222,6 @@ void displayNetworkName(String networkName)
   oled.display();
 }
 
-void handleFavicon() {
-  //server.send(404, "text/html; charset=iso-8859-1","<html><head> <title>404 Not Found</title></head><body><h1>Not Found</h1></body></html>");
-}
-
 void displayLocalIp(IPAddress ip) {
   oled.clearDisplay();
   oled.setCursor(0, 0);
@@ -247,6 +231,7 @@ void displayLocalIp(IPAddress ip) {
   oled.println(ip);
   oled.display();
 }
+
 void displayConnectingScreen() {
   static int counter = 0;
   counter++;
@@ -272,4 +257,4 @@ void displayNewClientMessage() {
   oled.setCursor(0,0);
   oled.println("new request received");
   oled.display();
-  }
+}
