@@ -9,6 +9,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_FeatherOLED.h>
+#define BUTTON_C 2
 
 Adafruit_FeatherOLED oled = Adafruit_FeatherOLED();
 
@@ -40,7 +41,7 @@ DallasTemperature sensors(&oneWire);
 
 SensorData sensorDataInfo[kMaxSensorsAvailable];
 uint8_t numberOfSensorsFound = 0;
-
+uint8_t screenToShow = 0;
 void setup() {
   Serial.begin(115200);
   initializeDisplay();
@@ -70,7 +71,8 @@ void setup() {
 void loop() {
   // Check if a client has connected
   WiFiClient client = server.available();
-  if (!client) {
+  if (!client)
+  {
     updateTemperatureValues();
     if (C_buttonPressed)
     {
