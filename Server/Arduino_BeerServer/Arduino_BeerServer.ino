@@ -173,7 +173,7 @@ void updateTemperatureValues() {
 }
 
 void handleButtonPress() {
-  C_buttonPressed = !C_buttonPressed;
+  C_buttonPressed = !digitalRead(2);
 }
 // function to print a device address
 void printAddress(DeviceAddress deviceAddress)
