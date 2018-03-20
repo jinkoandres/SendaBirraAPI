@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 
 import { CustomHeader } from '../components/CustomHeader.js';
+import { SensorView } from '../components/SensorView.js';
+
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
@@ -20,11 +22,11 @@ export default class HomeScreen extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-      <CustomHeader titleText = "Live info"/>
+      <CustomHeader titleText = "Live data"/>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-        <Text> sensor 1</Text>
-        <Text> sensor 2</Text>
-        <Text> sensor 3</Text>
+        <SensorView id="1" temp="30.0" lastread="20" warning="true"></SensorView>
+        <SensorView id="2" temp="70.2" lastread="20" warning="false"></SensorView>
+        <SensorView id="3" temp="43.5" lastread="20" warning="true"></SensorView>
         </ScrollView>
       </View>
     );
