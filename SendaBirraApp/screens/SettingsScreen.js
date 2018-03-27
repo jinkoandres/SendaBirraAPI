@@ -5,55 +5,59 @@ import {
   StyleSheet,
   Text,
   View,
+  Button
 } from 'react-native';
 
 import { CustomHeader } from '../components/CustomHeader.js';
+import { IPAddressComponent} from '../components/IPAddressComponent.js'
 
 export default class SettingsScreen extends React.Component {
   static navigationOptions = {
     header: null,
     title: 'Settings',
   };
-
+  state =  {
+    connected : false,
+    serverAddress: ""
+  }
+  onServerAddressChanged = (new_address) => {
+    console.log('on server address called ' + new_address);
+    this.setState({serverAddress: new_address});
+    console.log (this.state.serverAddress);
+  }
+  
+  connectToServer() {
+    console.log (this.state.serverAddress);
+    console.log("is Already connected? " + this.state.connected);
+    if (this.state.connected === false) {
+      console.log ('Start Timer on ' + this.state.serverAddress);
+      this.setState({connected: true});
+    }else {
+      this.setState({connected: false});
+    }
+  }
   render() {
-    /* Go ahead and delete ExpoConfigView and replace it with your
-     * content, we just wanted to give you a quick view of your config */
-    const 
-    {
-      mainContainer,
-      ipContainer,
-      ipSegment 
-    } = styles;
-    
+    const { mainContainer } = styles;
+    let button_text = this.state.connected ? 'Disconnect' : 'Connect';
     return (
       <View style={mainContainer}>
         <CustomHeader titleText="Settings" />
-        <View style={ipContainer}>
-          <TextInput style={ipSegment} />
-          <TextInput style={ipSegment} />
-          <TextInput style={ipSegment} />
-          <TextInput style={ipSegment} />
-        </View>
+        <IPAddressComponent onAddressChanged = {this.onServerAddressChanged}/>
+        
+        <Button title={button_text} onPress={() => this.connectToServer()} />
       </View>
     );
   }
 }
+
+
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#bef',
+
   },
   contentContainer: {
     paddingTop: 10,
   },
-  ipContainer: {
-    flex: 1, 
-    flexDirection : 'row',
-    justifyContent: 'space-between',
-    backgroundColor:'#ffffee'
-  },
-  ipSegment: {
-    flex: 1,
-    backgroundColor: '#ffeeff'
-  }
 });
