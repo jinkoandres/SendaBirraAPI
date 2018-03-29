@@ -7,15 +7,9 @@ export class SensorView extends React.Component {
         const {id, temp, lastread, warning} = this.props;
         return (
             <View sytle={styles.sensorContainer}>
-                <View style={styles.sensorId}>
-                    <Text>Sensor id: {id}</Text>
-                </View>
-                <View style={styles.temperature}>
-                    <Text >Temp: {temp} ºC</Text>
-                </View>
-                <View style={styles.lastReadingTime}>
-                    <Text>Last reading: {lastread} seconds</Text>
-                </View>
+                <Text adjustFontSizeToFit = 'true'>Sensor id: {id}</Text>
+                <Text adjustFontSizeToFit  = 'true'>Temp: {temp} ºC</Text>
+                <Text adjustFontSizeToFit  = 'true'>Last reading: {lastread} seconds</Text>
             </View>
         );
     }
@@ -24,14 +18,15 @@ export class SensorView extends React.Component {
 
 const styles = StyleSheet.create({
     sensorContainer:{
-        flex: 1,
+        flex: 0.5,
         borderColor:'#fa0',
-        flexDirection:"column",
+        flexDirection:"row",
         justifyContent:"flex-start",
         backgroundColor: '#020202'
     },
     sensorId: {
-        flex:1, 
+        flex:1,
+         
     },
     temperature: {
         flex: 1

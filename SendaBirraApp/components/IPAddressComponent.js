@@ -4,11 +4,6 @@ import {View, StyleSheet, Text} from 'react-native'
 import { IPSegment } from '../components/IPSegment.js';
 
 export class IPAddressComponent extends React.Component {
-    componentDidMount(){
-        console.log('ipaddress component did mount')
-        this.makeNewAddress();
-        console.log(this.makeIpString());
-    }
     state = {
         segments : [
             {
@@ -46,6 +41,7 @@ export class IPAddressComponent extends React.Component {
         var new_address = this.makeIpString();
         this.props.onAddressChanged(new_address);
     }
+    
     makeIpString() {
         const { segments} = this.state;
         var values = segments.map(segment => segment.value);
@@ -56,7 +52,7 @@ export class IPAddressComponent extends React.Component {
 const styles = StyleSheet.create({
     ipContainer: {
         flex: 1, 
-        paddingTop : 20,
+        padding : 8,
         flexDirection : 'row',
         justifyContent: 'space-between',
         backgroundColor:'#bef',

@@ -2,8 +2,16 @@ import React from 'react';
 import { View, TextInput, StyleSheet} from 'react-native';
 
 export class IPSegment extends React.Component {
+    state = {
+        currentValue: this.props.value
+    }
+
+    handleTextChange = (text) => {
+        console.log('text is ' + text)
+        this.setState({ currentValue: text });
+
+  }  
   render() {
-    
     return (
         <View style={styles.ipSegment}>
             <TextInput
@@ -12,7 +20,8 @@ export class IPSegment extends React.Component {
                 placeholder = "255"
                 fontSize = "24" 
                 textAlign = "center"
-                value = {this.props.value}
+                onChangeText= {this.handleTextChange}
+                value = {this.state.currentValue}
             />
         </View>
     );
@@ -21,10 +30,10 @@ export class IPSegment extends React.Component {
 const styles = StyleSheet.create({
     ipSegment: {
         flex: 1,
-        padding : 2,
         backgroundColor: '#ffff',
-        margin: 2,
-        justifyContent : 'center'
+        margin: 8,
+        justifyContent : 'center',
+        borderRadius : 4
       }
 
 });
