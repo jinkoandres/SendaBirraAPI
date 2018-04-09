@@ -4,25 +4,20 @@ import {View, StyleSheet, Text} from 'react-native'
 import { IPSegment } from '../components/IPSegment.js';
 
 export class IPAddressComponent extends React.Component {
-    state = {
-        segments : [
-            {
-                id: 0,
-                value: '192'
-            }, 
-            {
-                id: 1,
-                value: '168'
-            },
-            {
-                id: 2,
-                value: '1'
-            },  
-            {
-                id: 3,
-                value: '254'
-            }
-        ]
+
+    constructor(props) {
+        super(props);
+        
+        init_state = { segments: [] };
+        initial_array = this.props.initialIpAddress.split(".");
+        
+        for (var i = 0; i < initial_array.length; i++) {
+            init_state.segments.push({
+                id: i,
+                value: initial_array[i]
+            });
+        }
+        this.state = init_state;
     }
     
     render() {
@@ -32,15 +27,25 @@ export class IPAddressComponent extends React.Component {
             </View>
         )
     }
-
+    
     renderSegments() {
         const { segments } = this.state;
-        return segments.map(segment => <IPSegment key = {segment.id} value = {segment.value}/>);
+        return segments.map(segment => <IPSegment key = {segment.id}
+                                                 index = {segment.id} 
+                                                 value = {segment.value} 
+                                                 segmentChangeCallback = {this.onAddressSegmentChange.bind(this)}/>);
     }
-    makeNewAddress() {
-        var new_address = this.makeIpString();
-        this.props.onAddressChanged(new_address);
+    
+    onAddressSegmentChange(index, new_value) {
+        console.log("address changed in index " + index + " to " + new_value);
+        const new_array = [...this.state.segments];
+        new_array[index].value = new_value;
+        this.setState({segments : new_array});
+        console.log("new ip is : " + this.makeIpString());
+        this.props.ipAddressChangeCallback(this.makeIpString());
     }
+
+
     
     makeIpString() {
         const { segments} = this.state;

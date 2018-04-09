@@ -12,13 +12,15 @@ import { CustomHeader } from '../components/CustomHeader.js';
 import { IPAddressComponent} from '../components/IPAddressComponent.js'
 
 export default class SettingsScreen extends React.Component {
+  
   static navigationOptions = {
     header: null,
     title: 'Settings',
   };
+
   state =  {
     connected : false,
-    serverAddress: ""
+    serverAddress: "192.168.1.254"
   }
   onServerAddressChanged = (new_address) => {
     console.log('on server address called ' + new_address);
@@ -26,11 +28,17 @@ export default class SettingsScreen extends React.Component {
     console.log (this.state.serverAddress);
   }
   
+  IpAddrChanged(ip) {
+    console.log(ip);
+    this.setState({serverAddress: ip});
+  }
+
   connectToServer() {
     console.log (this.state.serverAddress);
     console.log("is Already connected? " + this.state.connected);
     if (this.state.connected === false) {
-      console.log ('Start Timer on ' + this.state.serverAddress);
+      console.log ("Start Timer on " + this.state.serverAddress);
+      alert(this.state.serverAddress);
       this.setState({connected: true});
     }else {
       this.setState({connected: false});
@@ -38,11 +46,13 @@ export default class SettingsScreen extends React.Component {
   }
   render() {
     const { mainContainer } = styles;
-    let button_text = this.state.connected ? 'Disconnect' : 'Connect';
+    let button_text = this.state.connected ? "Disconnect" : "Connect";
     return (
       <View style={mainContainer}>
         <CustomHeader titleText="Settings" />
-        <IPAddressComponent onAddressChanged = {this.onServerAddressChanged}/>
+        <IPAddressComponent onAddressChanged = {this.onServerAddressChanged} 
+                            initialIpAddress = {this.state.serverAddress} 
+                            ipAddressChangeCallback={this.IpAddrChanged.bind(this)}/>
         
         <Button title={button_text} onPress={() => this.connectToServer()} />
       </View>
