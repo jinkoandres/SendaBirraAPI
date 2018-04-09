@@ -28,7 +28,7 @@ export default class SettingsScreen extends React.Component {
     console.log (this.state.serverAddress);
   }
   
-  IpAddrChanged(ip) {
+  IpAddressChanged(ip) {
     console.log(ip);
     this.setState({serverAddress: ip});
   }
@@ -52,7 +52,7 @@ export default class SettingsScreen extends React.Component {
         <CustomHeader titleText="Settings" />
         <IPAddressComponent onAddressChanged = {this.onServerAddressChanged} 
                             initialIpAddress = {this.state.serverAddress} 
-                            ipAddressChangeCallback={this.IpAddrChanged.bind(this)}/>
+                            ipAddressChangeCallback={this.IpAddressChanged.bind(this)}/>
         
         <Button title={button_text} onPress={() => this.connectToServer()} />
       </View>
