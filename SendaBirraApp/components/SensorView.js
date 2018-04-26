@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     },
     infoContainer: {
         flex: 1,
-        justifyContent: "flex-start",
+        justifyContent: "space-between",
         alignItems : 'center'
     },
     warning: {
