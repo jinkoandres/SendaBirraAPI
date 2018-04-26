@@ -33,7 +33,13 @@ export class IPAddressComponent extends React.Component {
         return segments.map(segment => <IPSegment key = {segment.id}
                                                  index = {segment.id} 
                                                  value = {segment.value} 
-                                                 segmentChangeCallback = {this.onAddressSegmentChange.bind(this)}/>);
+                                                 segmentChangeCallback = {this.onAddressSegmentChange.bind(this)}
+                                                 segmentSubmitCallback = {this.onSegmentSubmit.bind(this)}/>);
+    }
+    onSegmentSubmit(value) 
+    {
+        //if(parseInt(value))
+        console.log(value);
     }
     
     onAddressSegmentChange(index, new_value) {

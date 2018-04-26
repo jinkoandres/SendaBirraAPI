@@ -22,6 +22,7 @@ export default class SettingsScreen extends React.Component {
     connected : false,
     serverAddress: "192.168.1.254"
   }
+
   onServerAddressChanged = (new_address) => {
     console.log('on server address called ' + new_address);
     this.setState({serverAddress: new_address});
@@ -33,13 +34,22 @@ export default class SettingsScreen extends React.Component {
     this.setState({serverAddress: ip});
   }
 
-  connectToServer() {
-    console.log (this.state.serverAddress);
+  async connectToServer() {
     console.log("is Already connected? " + this.state.connected);
     if (this.state.connected === false) {
-      console.log ("Start Timer on " + this.state.serverAddress);
-      alert(this.state.serverAddress);
+      try{
+      // let response = await fetch("http://" + this.state.serverAddress + "/sensors/raw");
+      let response = await fetch("https://facebook.github.io/react-native/movies.json");
+      let ResponseText = await response.json();
+      console.log(ResponseText);
       this.setState({connected: true});
+      } catch(error){
+        this.setState({connected: false});
+        alert("Can't connect to server \n Error:" + error.message);
+        console.log(JSON.stringify(error));
+        console.log(error);
+      }
+      
     }else {
       this.setState({connected: false});
     }

@@ -10,17 +10,22 @@ export class IPSegment extends React.Component {
     handleTextChange = (text) => {
         let valueAsInt = parseInt(text);
         console.log(valueAsInt);
-        if (text === "") {
-            valueAsInt = 0;
-        }
-        else if (Number.isNaN(valueAsInt)) {
-            return;
-        }
-        
-        this.props.segmentChangeCallback(this.props.index, valueAsInt.toString());
+        // if (text === "") {
+        //     valueAsInt = 0;
+        // }
+        // else if (Number.isNaN(valueAsInt)) {
+        //     return;
+        // }
+        // if (text.search(',') == -1)
+            this.props.segmentChangeCallback(this.props.index, text);
 
     }
 
+    handleSubmit = () => {
+        console.log("handle submit");
+        this.props.segmentSubmitCallback(this.props.index);
+    }
+    
     render() {
         return (
             <View style={styles.ipSegment}>
@@ -31,7 +36,9 @@ export class IPSegment extends React.Component {
                     fontSize="24"
                     textAlign="center"
                     onChangeText={this.handleTextChange}
+                    onSubmitEditing={this.handleSubmit}
                     value={this.props.value}
+                    returnKeyType='done'
                 />
             </View>
         );

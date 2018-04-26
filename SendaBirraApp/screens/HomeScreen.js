@@ -20,6 +20,7 @@ export default class HomeScreen extends React.Component {
   };
 
   render() {
+    let 
     return (
       <View style={styles.homeScreenStyle}>
         <CustomHeader titleText = "Live data"/>
