@@ -33,27 +33,26 @@ export class IPAddressComponent extends React.Component {
         return segments.map(segment => <IPSegment key = {segment.id}
                                                  index = {segment.id} 
                                                  value = {segment.value} 
-                                                 segmentChangeCallback = {this.onAddressSegmentChange.bind(this)}
-                                                 segmentSubmitCallback = {this.onSegmentSubmit.bind(this)}/>);
+                                                 segmentChangeCallback = {this.onAddressSegmentChange}
+                                                 segmentSubmitCallback = {this.onSegmentSubmit}/>);
     }
-    onSegmentSubmit(value) 
-    {
+    onSegmentSubmit = (value) => { 
         //if(parseInt(value))
         console.log(value);
     }
     
-    onAddressSegmentChange(index, new_value) {
+    onAddressSegmentChange = (index, new_value) => {
         console.log("address changed in index " + index + " to " + new_value);
         const new_array = [...this.state.segments];
         new_array[index].value = new_value;
         this.setState({segments : new_array});
-        console.log("new ip is : " + this.makeIpString());
-        this.props.ipAddressChangeCallback(this.makeIpString());
+        console.log("new ip is : " + makeIpString());
+        this.props.ipAddressChangeCallback(makeIpString());
     }
 
 
     
-    makeIpString() {
+    makeIpString = () => {
         const { segments} = this.state;
         var values = segments.map(segment => segment.value);
         return values.join('.');
@@ -68,6 +67,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         backgroundColor:'#bef',
         minHeight: 44,
-        maxHeight : 100
+        maxHeight : 100,
+        marginTop: 4
       }
 })
