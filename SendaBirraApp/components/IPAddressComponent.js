@@ -28,7 +28,7 @@ export class IPAddressComponent extends React.Component {
         )
     }
     
-    renderSegments() {
+    renderSegments = () => {
         const { segments } = this.state;
         return segments.map(segment => <IPSegment key = {segment.id}
                                                  index = {segment.id} 

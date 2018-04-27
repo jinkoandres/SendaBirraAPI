@@ -2,10 +2,6 @@ import React from 'react';
 import { View, TextInput, StyleSheet, Keyboard} from 'react-native';
 
 export class IPSegment extends React.Component {
-
-    constructor(props) {
-        super(props);
-    }
     
     handleTextChange = (text) => {
         let valueAsInt = parseInt(text);
