@@ -46,14 +46,14 @@ export class IPAddressComponent extends React.Component {
         const new_array = [...this.state.segments];
         new_array[index].value = new_value;
         this.setState({segments : new_array});
-        console.log("new ip is : " + makeIpString());
-        this.props.ipAddressChangeCallback(makeIpString());
+        console.log("new ip is : " + this.makeIpString());
+        this.props.ipAddressChangeCallback(this.makeIpString());
     }
 
 
     
     makeIpString = () => {
-        const { segments} = this.state;
+        const { segments } = this.state;
         var values = segments.map(segment => segment.value);
         return values.join('.');
     }
