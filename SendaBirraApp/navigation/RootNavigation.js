@@ -4,21 +4,19 @@ import { StackNavigator } from 'react-navigation';
 
 import MainTabNavigator from './MainTabNavigator';
 import registerForPushNotificationsAsync from '../api/registerForPushNotificationsAsync';
+import SettingsScreen from '../screens/SettingsScreen';
+import HomeScreen from '../screens/HomeScreen';
 
-const RootStackNavigator = StackNavigator(
-  {
-    Main: {
-      screen: MainTabNavigator,
-    },
-  },
-  {
-    navigationOptions: () => ({
-      headerTitleStyle: {
-        fontWeight: 'normal',
-      },
-    }),
-  }
-);
+const RootStackNavigator = StackNavigator({
+  Settings: {screen: SettingsScreen}, 
+  Sensors: {screen: HomeScreen}, 
+  initialRouteName: 'Settings',
+  navigationOptions: ({navigation}) => (
+    {
+      headerMode: 'float'
+    }
+  )
+});
 
 export default class RootNavigator extends React.Component {
   componentDidMount() {

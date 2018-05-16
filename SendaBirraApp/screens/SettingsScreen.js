@@ -15,7 +15,7 @@ import { TimerComponent } from '../components/TimerComponent.js';
 export default class SettingsScreen extends React.Component {
   
   static navigationOptions = {
-    header: null,
+    header: <CustomHeader titleText = 'Settings'/>,
     title: 'Settings',
   };
 
@@ -52,7 +52,7 @@ export default class SettingsScreen extends React.Component {
       let ResponseText = await response.json();
       console.log(ResponseText);
       this.setState({connected: true});
-      navigation.navigate('Home', 
+      navigation.push('Sensors', 
       { 
         serverInfo: 
         {
@@ -97,7 +97,6 @@ export default class SettingsScreen extends React.Component {
   
     return (
       <View style={mainContainer}>
-        <CustomHeader titleText="Settings" />
         <Text style = {{padding: 10}}>Server IP Adress</Text>
         <IPAddressComponent onAddressChanged = {this.onServerAddressChanged} 
                             initialIpAddress = {this.state.serverAddress} 

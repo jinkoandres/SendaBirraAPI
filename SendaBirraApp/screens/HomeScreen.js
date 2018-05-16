@@ -11,9 +11,10 @@ import { SensorView } from '../components/SensorView.js';
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
-    header: null,
+    header: <CustomHeader titleText = 'Sensors'/>,
     title: 'Sensors'
   };
+
   state = {
     serverInfo:
       {
@@ -23,6 +24,12 @@ export default class HomeScreen extends React.Component {
       },
     sensorData: []
   }
+  constructor(props) {
+    super(props);
+    this.refreshIntervalId = null;
+    this.updateScreenIntervalId = null;
+  }
+
   updateSensorInfo = () => {
     console.log('Timeout. update sensor info');
     const { sensorData } = this.state;
@@ -46,8 +53,9 @@ export default class HomeScreen extends React.Component {
     this.setState({ sensorData: sensorArray });
   }
 
-  componentWillReceiveProps = (nextProps) => {
-    const { params } = nextProps.navigation.state;
+  componentDidMount = () => {
+    console.log('willreceiveprops');
+    const { params } = this.props.navigation.state;
 
     if (params != null) {
       const serverInfo = params.serverInfo;
@@ -57,9 +65,17 @@ export default class HomeScreen extends React.Component {
         currentlyConnected: serverInfo.connectionStatus,
         sensorData: serverInfo.sensorData
       });
-      setInterval(this.updateSensorInfo, 1000 * serverInfo.timerPeriodInSeconds)
-      setInterval(this.updateReadTime, 1000);
+      this.refreshIntervalId = setInterval(this.updateSensorInfo, 1000 * serverInfo.timerPeriodInSeconds)
+      this.updateScreenIntervalId = setInterval(this.updateReadTime, 1000);
+      console.log('intervals are ' + this.refreshIntervalId + ' and ' + this.updateScreenIntervalId);
     }
+    
+    this.props.navigation.addListener('willBlur', this.componentWillBlur);
+  }
+  componentWillBlur = () => {
+    console.log('component will blur ');
+    clearInterval(this.refreshIntervalId);
+    clearInterval(this.updateScreenIntervalId);
   }
   renderSensors = () => {
     const { currentlyConnected, sensorData } = this.state
@@ -87,9 +103,9 @@ export default class HomeScreen extends React.Component {
 
   render() {
     let isConnected = this.state.currentlyConnected;
+
     return (
       <View style={styles.homeScreenStyle}>
-        <CustomHeader titleText="Live data" />
         {this.renderSensors()}
       </View>
     );
