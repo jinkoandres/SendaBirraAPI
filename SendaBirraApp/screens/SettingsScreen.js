@@ -12,6 +12,8 @@ import { CustomHeader } from '../components/CustomHeader.js';
 import { IPAddressComponent } from '../components/IPAddressComponent.js';
 import { TimerComponent } from '../components/TimerComponent.js';
 
+ var connectionStatus = Object.freeze({disconnected: 0, connecting: 1, connected: 2});
+
 export default class SettingsScreen extends React.Component {
   
   static navigationOptions = {
@@ -20,8 +22,8 @@ export default class SettingsScreen extends React.Component {
   };
 
   state =  {
-    connected : false,
-    serverAddress: '192.168.1.254',
+    connected : connectionStatus.disconnected,
+    serverAddress: '192.168.2.254',
     period: 10
   }
 
@@ -41,60 +43,57 @@ export default class SettingsScreen extends React.Component {
     
   }
   
-  async connectToServer() {
-    const { navigation } = this.props;
+  connectToServer = async () => {
+    const {
+      navigation
+    } = this.props;
 
-    console.log("is Already connected? " + this.state.connected);
-    if (this.state.connected === false) {
-      try{
-      // let response = await fetch("http://" + this.state.serverAddress + "/sensors/raw");
-      let response = await fetch("https://facebook.github.io/react-native/movies.json");
-      let ResponseText = await response.json();
-      console.log(ResponseText);
-      this.setState({connected: true});
-      navigation.push('Sensors', 
-      { 
-        serverInfo: 
-        {
-          serverIp: this.state.serverAddress,
-          timerPeriodInSeconds : this.state.period, 
-          connectionStatus: this.state.connected,
-          sensorData :
-            [
-              {
-                id : 1, 
-                temp : 37,
-                lastReading : 0
-              },
-              {
-                id : 2, 
-                temp : 37,
-                lastReading : 0
-              },
-              {
-                id : 3, 
-                temp : 37,
-                lastReading : 0
-              }
-            ]
-        }
-      });
-      } catch(error){
-        this.setState({connected: false});
-        alert("Can't connect to server \n Error:" + error.message);
-        console.log(JSON.stringify(error));
-        console.log(error);
-      }
+    const { connected, serverAddress, period} = this.state;
+    console.log(`is Already connected? ${connected}`);
+    if (connected === connectionStatus.disconnected) {
       
-    }else {
-      this.setState({connected: false});
+      this.setState({
+        connected: connectionStatus.connecting
+      });
+      
+      console.log(`start fetch at http://${serverAddress}/sensors/raw`);
+      let debug = false; 
+
+      if (debug) {
+        navigation.push('Sensors', this.makeObjectWithServerInfo({sensor1: 25.55, sensor2: 33.44, sensor3: 33.43}));
+        return;
+      }
+      try {
+        let response = await fetch(`http://${serverAddress}/sensors/raw`);
+        // let response = await fetch("http://facebook.github.io/react-native/movies.json");
+        let responseJSON = await response.json();
+        console.log(`got reply ${JSON.stringify(responseJSON)}`);
+        this.setState({
+          connected: connectionStatus.connected
+        });
+
+        console.log('Connected. Navigating to Sensor page');
+        console.log (`Parameters : ${JSON.stringify(this.makeObjectWithServerInfo(responseJSON))}`);
+        navigation.push('Sensors', this.makeObjectWithServerInfo(responseJSON));
+      } catch (error) {
+        this.setState({
+          connected: connectionStatus.disconnected
+        });
+        alert(`Can't connect to server \n Error: ${error.message}`);
+      }
+
+    } else {
+      this.setState({
+        connected: connectionStatus.connected
+      });
     }
   }
   
   render() {
     const { mainContainer } = styles;
-    let button_text = this.state.connected ? "Disconnect" : "Connect";
-  
+    
+    let button_text = this.getButtonText();
+    let shouldDisable = this.state.connected === connectionStatus.connecting;
     return (
       <View style={mainContainer}>
         <Text style = {{padding: 10}}>Server IP Adress</Text>
@@ -102,10 +101,49 @@ export default class SettingsScreen extends React.Component {
                             initialIpAddress = {this.state.serverAddress} 
                             ipAddressChangeCallback={this.IpAddressChanged.bind(this)}/>
         <TimerComponent value = {this.state.period} setTimerCallback = {this.onTimerPeriodChange}/>
-        <Button title={button_text} onPress={() => this.connectToServer()} />
+        <Button title={button_text} onPress={this.connectToServer} disabled = {shouldDisable} />
 
       </View>
     );
+  }
+  makeObjectWithServerInfo = (responseJSON) => {
+    const {serverAddress, period, connected} = this.state;
+    const {sensor1, sensor2, sensor3} = responseJSON;
+    
+    return {
+      serverIp: serverAddress,
+      timerPeriodInSeconds: period,
+      connectionStatus: connected,
+      sensorData: [{
+          id: 1,
+          temp: sensor1,
+          lastReading: 0
+        },
+        {
+          id: 2,
+          temp: sensor2,
+          lastReading: 0
+        },
+        {
+          id: 3,
+          temp: sensor3,
+          lastReading: 0
+        }
+      ]
+    }
+  }
+
+  getButtonText = () => {
+    const {connected: isConnecting} = this.state;
+    
+    switch (isConnecting) {
+      case connectionStatus.disconnected:
+      return 'Start';
+      case connectionStatus.connecting:
+      return 'Connecting ...';
+      case connectionStatus.connected:
+      return 'Disconnect';
+    }
   }
 }
 

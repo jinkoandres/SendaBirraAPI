@@ -15,73 +15,90 @@ export default class HomeScreen extends React.Component {
     title: 'Sensors'
   };
 
-  state = {
-    serverInfo:
-      {
-        currentServerAddress: '',
-        currentlyConnected: false,
-        timerPeriod: 0
-      },
-    sensorData: []
-  }
   constructor(props) {
     super(props);
-    this.refreshIntervalId = null;
+    const { params } = this.props.navigation.state;
+    console.log (' constructor ' + JSON.stringify(this.props.navigation, null, 3));
+    this.timeoutId = null;
     this.updateScreenIntervalId = null;
+
+    if (params != null) {
+      console.log('received value ' + params.serverIp);
+      //this.setState({currentServerAddress : params.serverIp});
+      this.state = {
+        currentServerAddress: params.serverIp,
+        currentlyConnected: 2,
+        timerPeriod: params.timerPeriodInSeconds,
+        lastSensorData: params.sensorData
+      };
+    } else {
+      this.state = {
+        currentServerAddress: '',
+        currentlyConnected: 0,
+        timerPeriod: 0,
+        lastSensorData: []
+      };
+    }
   }
 
-  updateSensorInfo = () => {
+  updateSensorInfo = async () => {
     console.log('Timeout. update sensor info');
-    const { sensorData } = this.state;
-    const sensorArray = sensorData;
+    const { lastSensorData, currentServerAddress } = this.state;
+    const sensorArray = lastSensorData;
 
-    sensorArray.forEach((sensor) => {
-      sensor.lastReading = 0;
-    });
+    console.log(this.state);
+    try {
+      let serverResponse = await fetch("http://" + currentServerAddress + "/sensors/raw");
+      
+      let responseText = await serverResponse.json();
+      let {sensor1, sensor2, sensor3} = responseText;
+      
+      sensorArray[0].temp = sensor1;
+      sensorArray[1].temp = sensor2;
+      sensorArray[2].temp = sensor3;
+      
+      sensorArray.forEach((sensor) => {
+        sensor.lastReading = 0;
+      });
 
-    this.setState({ sensorData: sensorArray });
+      this.setState({ lastsensorData: sensorArray });
+
+    }catch (error) {
+      alert(error.message);
+    }
+    clearTimeout(this.timeoutId);
+    this.timeoutId = setTimeout(this.updateSensorInfo, this.state.timerPeriod * 1000);
   }
 
   updateReadTime = () => {
-    const { sensorData } = this.state;
-    const sensorArray = sensorData;
+    const { lastSensorData } = this.state;
+    const sensorArray = lastSensorData;
 
-    sensorArray.forEach((sensor) => {
-      sensor.lastReading++;
-    });
+    sensorArray.forEach(sensor => sensor.lastReading++);
 
-    this.setState({ sensorData: sensorArray });
+    this.setState({ lastsensorData: sensorArray });
   }
 
   componentDidMount = () => {
-    console.log('willreceiveprops');
-    const { params } = this.props.navigation.state;
-
-    if (params != null) {
-      const serverInfo = params.serverInfo;
-      console.log(serverInfo);
-      this.setState({
-        currentServerAddress: serverInfo.serverIP,
-        currentlyConnected: serverInfo.connectionStatus,
-        sensorData: serverInfo.sensorData
-      });
-      this.refreshIntervalId = setInterval(this.updateSensorInfo, 1000 * serverInfo.timerPeriodInSeconds)
-      this.updateScreenIntervalId = setInterval(this.updateReadTime, 1000);
-      console.log('intervals are ' + this.refreshIntervalId + ' and ' + this.updateScreenIntervalId);
-    }
+    console.log('component did mount');
+    this.updateScreenIntervalId = setInterval(this.updateReadTime, 1000);
+    console.log('intervals are ' + this.timeoutId + ' and ' + this.updateScreenIntervalId);
+    this.updateSensorInfo();
     
     this.props.navigation.addListener('willBlur', this.componentWillBlur);
   }
   componentWillBlur = () => {
     console.log('component will blur ');
-    clearInterval(this.refreshIntervalId);
+    clearTimeout(this.timeoutId);
     clearInterval(this.updateScreenIntervalId);
   }
+  
   renderSensors = () => {
-    const { currentlyConnected, sensorData } = this.state
+    const { currentlyConnected, lastSensorData } = this.state
     if (currentlyConnected) {
-      const currentInfo = sensorData.map((sensor) => {
-        return <SensorView key={sensor.id} id={sensor.id} temp={sensor.temp} lastread={sensor.lastReading} />
+      const currentInfo = lastSensorData.map((sensor) => {
+        let fixedTemp = sensor.temp.toFixed(2);
+        return <SensorView key={sensor.id} id={sensor.id} temp={fixedTemp} lastread={sensor.lastReading} />
       });
       return (
         <View style={styles.container}>
@@ -93,7 +110,7 @@ export default class HomeScreen extends React.Component {
     else {
       return (
         <View style={styles.container}>
-          <Text style={styles.textContainer}>You are currently Not connected. Check the Settings Tab</Text>
+          <Text style={styles.textContainer}>You are currently Not connected.</Text>
         </View>
 
       )
