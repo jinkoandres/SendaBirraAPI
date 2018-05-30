@@ -23,14 +23,12 @@ export default class SettingsScreen extends React.Component {
 
   state =  {
     connected : connectionStatus.disconnected,
-    serverAddress: '192.168.2.254',
+    serverAddress: '192.168.2.19',
     period: 10
   }
 
   onServerAddressChanged = (new_address) => {
-    console.log('on server address called ' + new_address);
     this.setState({serverAddress: new_address});
-    console.log (this.state.serverAddress);
   }
   
   onIpAddressChanged  = (ip) => {
@@ -49,14 +47,12 @@ export default class SettingsScreen extends React.Component {
     } = this.props;
 
     const { connected, serverAddress, period} = this.state;
-    console.log(`is Already connected? ${connected}`);
     if (connected === connectionStatus.disconnected) {
       
       this.setState({
         connected: connectionStatus.connecting
       });
       
-      console.log(`start fetch at http://${serverAddress}/sensors/raw`);
       let debug = false; 
 
       if (debug) {
@@ -65,21 +61,16 @@ export default class SettingsScreen extends React.Component {
       }
       try {
         let response = await fetch(`http://${serverAddress}/sensors/raw`);
-        // let response = await fetch("http://facebook.github.io/react-native/movies.json");
         let responseJSON = await response.json();
-        console.log(`got reply ${JSON.stringify(responseJSON)}`);
         this.setState({
           connected: connectionStatus.connected
         });
 
-        console.log('Connected. Navigating to Sensor page');
-        console.log (`Parameters : ${JSON.stringify(this.makeObjectWithServerInfo(responseJSON))}`);
         navigation.push('Sensors', this.makeObjectWithServerInfo(responseJSON));
       } catch (error) {
         this.setState({
           connected: connectionStatus.disconnected
         });
-        alert(`Can't connect to server \n Error: ${error.message}`);
       }
 
     } else {
@@ -99,7 +90,7 @@ export default class SettingsScreen extends React.Component {
         <Text style={{ padding: 10 }}>Server IP Adress</Text>
         <IPAddressComponent onAddressChanged={this.onServerAddressChanged}
           initialIpAddress={this.state.serverAddress}
-          ipAddressChangeCallback={this.onIpAddressChanged} />
+          ipAddressChangeCallback={this.onIpAddressChanged} disabled={shouldDisable} />
         <TimerComponent value={this.state.period} setTimerCallback={this.onTimerPeriodChange} />
         <Button title={button_text} onPress={this.connectToServer} disabled={shouldDisable} />
 

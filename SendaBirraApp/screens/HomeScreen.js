@@ -18,13 +18,10 @@ export default class HomeScreen extends React.Component {
   constructor(props) {
     super(props);
     const { params } = this.props.navigation.state;
-    console.log (' constructor ' + JSON.stringify(this.props.navigation, null, 3));
     this.timeoutId = null;
     this.updateScreenIntervalId = null;
 
     if (params != null) {
-      console.log('received value ' + params.serverIp);
-      //this.setState({currentServerAddress : params.serverIp});
       this.state = {
         currentServerAddress: params.serverIp,
         currentlyConnected: 2,
@@ -38,6 +35,7 @@ export default class HomeScreen extends React.Component {
         timerPeriod: 0,
         lastSensorData: []
       };
+      console.log("params not available");
     }
   }
 
@@ -46,7 +44,6 @@ export default class HomeScreen extends React.Component {
     const { lastSensorData, currentServerAddress } = this.state;
     const sensorArray = lastSensorData;
 
-    console.log(this.state);
     try {
       let serverResponse = await fetch("http://" + currentServerAddress + "/sensors/raw");
       
@@ -66,7 +63,6 @@ export default class HomeScreen extends React.Component {
     }catch (error) {
       alert(error.message);
     }
-    clearTimeout(this.timeoutId);
     this.timeoutId = setTimeout(this.updateSensorInfo, this.state.timerPeriod * 1000);
   }
 
@@ -76,14 +72,13 @@ export default class HomeScreen extends React.Component {
 
     sensorArray.forEach(sensor => sensor.lastReading++);
 
-    this.setState({ lastsensorData: sensorArray });
+    this.setState({ lastSensorData: sensorArray });
   }
 
   componentDidMount = () => {
     console.log('component did mount');
     this.updateScreenIntervalId = setInterval(this.updateReadTime, 1000);
-    console.log('intervals are ' + this.timeoutId + ' and ' + this.updateScreenIntervalId);
-    this.updateSensorInfo();
+    this.timeoutId = setTimeout(this.updateSensorInfo, 1000);
     
     this.props.navigation.addListener('willBlur', this.componentWillBlur);
   }

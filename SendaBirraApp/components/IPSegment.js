@@ -5,7 +5,6 @@ export class IPSegment extends React.Component {
     
     handleTextChange = (text) => {
         let valueAsInt = parseInt(text);
-        console.log(valueAsInt);
         // if (text === "") {
         //     valueAsInt = 0;
         // }

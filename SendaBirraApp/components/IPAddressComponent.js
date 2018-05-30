@@ -38,15 +38,12 @@ export class IPAddressComponent extends React.Component {
     }
     onSegmentSubmit = (value) => { 
         //if(parseInt(value))
-        console.log(value);
     }
     
     onAddressSegmentChange = (index, new_value) => {
-        console.log("address changed in index " + index + " to " + new_value);
         const new_array = [...this.state.segments];
         new_array[index].value = new_value;
         this.setState({segments : new_array});
-        console.log("new ip is : " + this.makeIpString());
         this.props.ipAddressChangeCallback(this.makeIpString());
     }
 
