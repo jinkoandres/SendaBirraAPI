@@ -61,7 +61,7 @@ export default class HomeScreen extends React.Component {
         sensor.lastReading = 0;
       });
 
-      this.setState({ lastsensorData: sensorArray });
+      this.setState({ lastSensorData: sensorArray });
 
     }catch (error) {
       alert(error.message);

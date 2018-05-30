@@ -33,7 +33,7 @@ export default class SettingsScreen extends React.Component {
     console.log (this.state.serverAddress);
   }
   
-  IpAddressChanged(ip) {
+  onIpAddressChanged  = (ip) => {
     this.setState({serverAddress: ip});
   }
 
@@ -84,7 +84,7 @@ export default class SettingsScreen extends React.Component {
 
     } else {
       this.setState({
-        connected: connectionStatus.connected
+        connected: connectionStatus.disconnected
       });
     }
   }
@@ -96,12 +96,12 @@ export default class SettingsScreen extends React.Component {
     let shouldDisable = this.state.connected === connectionStatus.connecting;
     return (
       <View style={mainContainer}>
-        <Text style = {{padding: 10}}>Server IP Adress</Text>
-        <IPAddressComponent onAddressChanged = {this.onServerAddressChanged} 
-                            initialIpAddress = {this.state.serverAddress} 
-                            ipAddressChangeCallback={this.IpAddressChanged.bind(this)}/>
-        <TimerComponent value = {this.state.period} setTimerCallback = {this.onTimerPeriodChange}/>
-        <Button title={button_text} onPress={this.connectToServer} disabled = {shouldDisable} />
+        <Text style={{ padding: 10 }}>Server IP Adress</Text>
+        <IPAddressComponent onAddressChanged={this.onServerAddressChanged}
+          initialIpAddress={this.state.serverAddress}
+          ipAddressChangeCallback={this.onIpAddressChanged} />
+        <TimerComponent value={this.state.period} setTimerCallback={this.onTimerPeriodChange} />
+        <Button title={button_text} onPress={this.connectToServer} disabled={shouldDisable} />
 
       </View>
     );
