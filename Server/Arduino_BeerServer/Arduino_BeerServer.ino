@@ -3,6 +3,8 @@
 */
 
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#include <WiFiClient.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <ArduinoJson.h>
@@ -13,8 +15,8 @@
 
 Adafruit_FeatherOLED oled = Adafruit_FeatherOLED();
 
-const char* kSSID     = "";
-const char* kNetworkPassword = "";
+const char* kSSID     = "Vengaboys";
+const char* kNetworkPassword = "Sandyypapo";
 
 boolean C_buttonPressed = false;
 
@@ -24,8 +26,9 @@ const int kMaxSensorsAvailable = 3;
 const int kJSONBufferSize = JSON_OBJECT_SIZE(kMaxSensorsAvailable);
 
 const int kDefaultNetworkTimeout = 20;
+IPAddress assignedIP;
 
-WiFiServer server(80);
+ESP8266WebServer server(80);
 IPAddress static_ip(192, 168, 2, 254);
 IPAddress gateway(192, 168, 2, 1);
 IPAddress subnet(255, 255, 255, 0);
@@ -40,8 +43,12 @@ OneWire  oneWire(kArduinoTemperatureDigitalPin);
 DallasTemperature sensors(&oneWire);
 
 SensorData sensorDataInfo[kMaxSensorsAvailable];
+
 uint8_t numberOfSensorsFound = 0;
 uint8_t screenToShow = 0;
+unsigned long lastReadTime = 0;
+unsigned long conversionTime = 0;
+
 void setup() {
   Serial.begin(115200);
   initializeDisplay();
@@ -54,8 +61,13 @@ void setup() {
       // Start the server
       displaySuccesfulConnetionMessage();
       delay(2000);
+      server.on("/", handleRoot);
+      server.on("/sensors", handleIndividualSensor);
+      server.on("/sensors/raw", handleAllSensors);
+      server.onNotFound ( handleNotFound );
       server.begin();
-      displayLocalIp(WiFi.localIP());
+      assignedIP = WiFi.localIP();
+      displayLocalIp(assignedIP);
       delay (2000);
     } else {
       displayWLConnectionTimeoutScreen(kSSID, 2000);
@@ -66,94 +78,96 @@ void setup() {
   }
 
   initializeInterrupts();
+
+}
+void handleRoot(){
+  String apiHelpText = "Welcome to the SendaBirra API\n";
+  apiHelpText += "API :\n";
+  apiHelpText += "/sensors/raw -> returns array of sensors\n";
+  apiHelpText += "/sensors?id=sensor # -> returns the specifics of a single sensor according to its id argument";
+  server.send ( 200, "text/plain", apiHelpText);
 }
 
+void handleNotFound() {
+  String message = "File Not Found\n\n";
+	message += "URI: ";
+	message += server.uri();
+	message += "\nMethod: ";
+	message += ( server.method() == HTTP_GET ) ? "GET" : "POST";
+	message += "\nArguments: ";
+	message += server.args();
+	message += "\n";
+
+	for ( uint8_t i = 0; i < server.args(); i++ ) {
+		message += " " + server.argName ( i ) + ": " + server.arg ( i ) + "\n";
+	}
+
+	server.send ( 404, "text/plain", message );
+  displayInvalidRequest();
+}
+void handleIndividualSensor()
+{
+  if (server.argName(0) == "id")
+  {
+    displayNewClientMessage();
+    int value = server.arg(0).toInt();
+    if (value <= kMaxSensorsAvailable)
+    {
+      StaticJsonBuffer<kJSONBufferSize> jsonBuffer;
+      JsonObject &root = jsonBuffer.createObject();
+      root["id"] = value;
+      root["temperature"] = sensorDataInfo[value - 1].temperatureValue;
+      root["elapsedMs"] = sensorDataInfo[value - 1].lastTempRequest;
+      String jsonPart;
+      root.printTo(jsonPart);
+      server.send(200, "application/json", jsonPart);
+    }
+    else
+    {
+      server.send(200, "text/plain", "Invalid argument for sensor: " + server.args());
+    }
+  }
+
+  else
+  {
+    server.send(200, "text/plain", "Invalid argument for sensor: " + server.args());
+  }
+}
+void handleAllSensors()
+{
+  displayNewClientMessage();
+  StaticJsonBuffer<kJSONBufferSize> jsonBuffer;
+  JsonObject &root = jsonBuffer.createObject();
+  root["sensor1"] = sensorDataInfo[0].temperatureValue;
+  root["sensor2"] = sensorDataInfo[1].temperatureValue;
+  root["sensor3"] = sensorDataInfo[2].temperatureValue;
+  String jsonPart;
+  root.printTo(jsonPart);
+  server.send(200, "application/json", jsonPart);
+}
 void loop() {
   // Check if a client has connected
-  WiFiClient client = server.available();
-  if (!client)
+  server.handleClient();
+  updateTemperatureValues();
+  
+  if (C_buttonPressed)
   {
-    updateTemperatureValues();
-    if (C_buttonPressed)
-    {
-      displayLocalIp(WiFi.localIP());
-    }
-    else {
-      displayTemperatureValues();
-    }
-    return;
+    displayLocalIp(assignedIP);
   }
-
-  // Wait until the client sends some data
-  displayNewClientMessage();
-  while (!client.available()) {
-    delay(10);
+  else
+  {
+    displayTemperatureValues();
   }
-
-  // Read the first line of the request
-  String req = client.readStringUntil('\r');
-  Serial.println(req);
-  client.flush();
-
-  // Match the request
-  String stringVal;
-  StaticJsonBuffer<kJSONBufferSize> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-
-  if (req.indexOf("/sensor/1") != -1) {
-    root["id"] = 1;
-    root["temperature"] = sensorDataInfo[0].temperatureValue;
-    root["elapsedMs"] = sensorDataInfo[0].lastTempRequest;
-    //root.printTo(Serial);
-  }
-  else if (req.indexOf("/sensor/2") != -1) {
-    root["id"] = 2;
-    root["temperature"] = sensorDataInfo[1].temperatureValue;
-    root["elapsedMs"] = sensorDataInfo[1].lastTempRequest;
-    //root.printTo(Serial);
-  }
-  else if (req.indexOf("/sensor/3") != -1) {
-    root["id"] = 3;
-    root["temperature"] = sensorDataInfo[2].temperatureValue;
-    root["elapsedMs"] = sensorDataInfo[2].lastTempRequest;
-    //root.printTo(Serial);
-  }
-  else if (req.indexOf("sensors/raw") != -1) {
-    root["sensor1"] = sensorDataInfo[0].temperatureValue;
-    root["sensor2"] = sensorDataInfo[1].temperatureValue;
-    root["sensor3"] = sensorDataInfo[2].temperatureValue;
-    //root.printTo(Serial);
-  }
-  else {
-    Serial.println("invalid request. stopping client " + req);
-    client.stop();
-    return;
-  }
-  client.flush();
-  size_t length = root.measureLength();
-  char jsonPart[length + 1];
-  root.printTo(jsonPart, length + 1);
-  client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: application/json;charset=utf-8");
-  client.println("Server: BeerServer Arduino");
-  client.println("Connection: close");
-  client.println();
-  client.println(jsonPart);
-  client.println();
-  delay(10);
-  client.stop();
-
-  //oled.println("Client disonnected");
-  //oled.display();
-  // The client will actually be disconnected
-  // when the function returns and 'client' object is detroyed
 }
 
 void initializeTemperatureLibrary() {
+  
   sensors.begin();
-  sensors.setResolution(12);
+  int resolution = 12;
+  conversionTime = 750 / (1 << (12 - resolution));
+  sensors.setResolution(resolution);
   sensors.requestTemperatures();
-
+  lastReadTime = millis();
   numberOfSensorsFound = sensors.getDeviceCount();
   updateTemperatureValues();
 
@@ -162,13 +176,19 @@ void initializeTemperatureLibrary() {
 
   displayNumberOfSensors(first_line);
 }
-void updateTemperatureValues() {
-  sensors.requestTemperatures();
+void updateTemperatureValues()
+{
+  if (millis() - lastReadTime > conversionTime)
+  {
+    sensors.requestTemperatures();
 
-  for (int i = 0; i < numberOfSensorsFound; i++) {
-    sensorDataInfo[i].temperatureValue = sensors.getTempCByIndex(i);
-    sensors.getAddress(sensorDataInfo[i].address, i);
-    sensorDataInfo[i].lastTempRequest = millis();
+    for (int i = 0; i < numberOfSensorsFound; i++)
+    {
+      sensorDataInfo[i].temperatureValue = sensors.getTempCByIndex(i);
+      sensors.getAddress(sensorDataInfo[i].address, i);
+      sensorDataInfo[i].lastTempRequest = millis();
+    }
+    lastReadTime = millis();
   }
 }
 
@@ -228,6 +248,13 @@ void displayNetworkName(String networkName)
   oled.println("");
   oled.display();
 }
+void displayInvalidRequest() {
+  oled.clearDisplay();
+  oled.setCursor(0,0);
+  oled.println("File Not Found at ");
+  oled.println(server.uri());
+  oled.println("Arguments " + server.args());
+}
 
 void displayLocalIp(IPAddress ip) {
   oled.clearDisplay();
@@ -235,7 +262,7 @@ void displayLocalIp(IPAddress ip) {
   oled.println("Server started on:");
   oled.println("");
   // Print the IP address
-  oled.println(ip);
+  oled.println(ip.toString());
   oled.display();
 }
 
@@ -289,7 +316,8 @@ void initializeInterrupts() {
   attachInterrupt(digitalPinToInterrupt(kButtonPin), handleButtonPress, CHANGE);
 }
 bool tryConnectingToNetwork (String networkName, String password, int timeOutValue) {
-  WiFi.config(static_ip, gateway, subnet);
+  // WiFi.config(static_ip, gateway, subnet);
+  WiFi.mode (WIFI_STA);
   WiFi.begin(kSSID, kNetworkPassword);
   int current_timeout = timeOutValue;
   
