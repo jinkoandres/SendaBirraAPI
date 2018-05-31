@@ -15,8 +15,8 @@
 
 Adafruit_FeatherOLED oled = Adafruit_FeatherOLED();
 
-const char* kSSID     = "Vengaboys";
-const char* kNetworkPassword = "Sandyypapo";
+const char* kSSID     = "";
+const char* kNetworkPassword = "";
 
 boolean C_buttonPressed = false;
 
@@ -57,7 +57,7 @@ void setup() {
   if (isNetworkNameNotEmpty(kSSID)) {
     // We start by connecting to a WiFi network
     displayNetworkName(kSSID);
-    if (tryConnectingToNetwork(kSSID, kNetworkPassword, kDefaultNetworkTimeout)) {
+    if (tryConnectingTotrNetwork(kSSID, kNetworkPassword, kDefaultNetworkTimeout)) {
       // Start the server
       displaySuccesfulConnetionMessage();
       delay(2000);
